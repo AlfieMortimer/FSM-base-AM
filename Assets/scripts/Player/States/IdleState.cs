@@ -12,6 +12,7 @@ namespace Player
         public override void Enter()
         {
             base.Enter();
+            player.animator.Play("arthur_stand", 0, 0);
         }
 
         public override void Exit()
@@ -27,9 +28,8 @@ namespace Player
         public override void LogicUpdate()
         {
             player.CheckForRun();
-            Debug.Log("checking for run");
             player.CheckForJump();
-            Debug.Log("checking for Jump");
+            player.CheckForCrouch();
             base.LogicUpdate();
         }
 

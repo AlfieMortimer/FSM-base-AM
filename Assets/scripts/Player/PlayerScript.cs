@@ -11,15 +11,20 @@ namespace Player
     public class PlayerScript : MonoBehaviour
     {
         public Rigidbody2D rb;
-        
+        public float speed;
+        public float _horizontalInput;
+        public bool grounded = false;
+        public float jumpheight = 0;
 
         // variables holding the different player states
         public IdleState idleState;
         public RunningState runningState;
         public JumpState jumpState;
+        public CrouchState crouchState;
 
         public StateMachine sm;
-
+        public Animator animator;
+        public SpriteRenderer sr;
 
 
         // Start is called before the first frame update
@@ -27,11 +32,16 @@ namespace Player
         {
             rb = GetComponent<Rigidbody2D>();
             sm = gameObject.AddComponent<StateMachine>();
+            animator = GetComponent<Animator>();
+            sr = GetComponent<SpriteRenderer>();
+
+
 
             // add new states here
             idleState = new IdleState(this, sm);
             runningState = new RunningState(this, sm);
             jumpState = new JumpState(this, sm);
+            crouchState = new CrouchState(this, sm);
 
             // initialise the statemachine with the default state
             sm.Init(idleState);
@@ -63,27 +73,37 @@ namespace Player
 
         public void CheckForRun()
         {
-            if (Input.GetKey("r")) // key held down
-            {
-                sm.ChangeState(runningState);
-                return;
-            }
+            _horizontalInput = Input.GetAxis("Horizontal");
+
+             if (_horizontalInput < 0) // key held down
+             {
+                 sm.ChangeState(runningState);
+                 sr.flipX = true;
+                 return;
+             }
+             else if (_horizontalInput > 0)
+             {
+                 sm.ChangeState(runningState);
+                 sr.flipX = false;
+                 return;
+             }
 
         }
 
 
         public void CheckForIdle()
         {
-            if (Input.GetKey("i") ) // key held down
+
+            _horizontalInput = Input.GetAxis("Horizontal");
+            if (rb.velocity.x == 0 && !Input.GetKey("s") && rb.velocity.y == 0)
             {
                 sm.ChangeState(idleState);
             }
-
         }
 
         public void CheckForJump()
         {
-            if (Input.GetKey(KeyCode.Space)) // key held down
+            if (Input.GetKey(KeyCode.Space) && grounded == true && rb.velocity.y == 0) // key held down
             {
                 sm.ChangeState(jumpState);
                 return;
@@ -91,7 +111,30 @@ namespace Player
 
         }
 
+        public void CheckForCrouch()
+        {
+            if (Input.GetKey("s") && grounded == true)
+            {
+                sm.ChangeState(crouchState);
+                return;
+            }
+        }
 
-    }
 
+
+
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (collision.gameObject.layer == 7)
+            {
+                grounded = true;
+            }
+
+        }
+        private void OnCollisionExit2D(Collision2D collision)
+        {
+            grounded = false;
+        }
+    }    
 }
